@@ -28,4 +28,4 @@ Pastikan kamu sudah menginstal **Node.js** dan **XAMPP** di laptopmu.
    `npm start`
 
 ---
-*Dibuat untuk keperluan Proyek PjBL Jurusan Rekayasa Perangkat Lunak (RPL).*
+*Terimakasih sudah membaca.*
