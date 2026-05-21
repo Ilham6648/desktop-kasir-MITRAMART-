@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>MITRAMART - Kasir Modern</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body { font-family: 'Poppins', sans-serif; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        #dashboard { display: none; }
+        .login-bg { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); z-index: 50; justify-content: center; align-items: center; }
+        #receipt-content { background: white; padding: 24px; border-radius: 16px; width: 340px; font-family: 'Courier New', Courier, monospace; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
+
+        /* ================= KUMPULAN ANIMASI KHUSUS ================= */
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes popIn { 0% { opacity: 0; transform: scale(0.85); } 80% { opacity: 1; transform: scale(1.02); } 100% { opacity: 1; transform: scale(1); } }
+        @keyframes slideInRight { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }
+
+        .anim-slide-up { animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+        .anim-pop-in { animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .anim-slide-right { animation: slideInRight 0.4s ease-out forwards; opacity: 0; }
+    </style>
+</head>
+<body class="bg-slate-100 h-screen overflow-hidden text-slate-800 relative">
+
+    <div id="login-screen" class="login-bg flex h-screen justify-center items-center relative overflow-hidden">
+        <div class="absolute w-96 h-96 bg-white/10 rounded-full blur-3xl -top-10 -left-20"></div>
+        <div class="absolute w-96 h-96 bg-white/10 rounded-full blur-3xl -bottom-20 -right-20"></div>
+        
+        <div class="bg-white/95 backdrop-blur-md p-10 rounded-3xl shadow-2xl w-[400px] z-10 text-center border border-white/20 anim-slide-up">
+            <div class="w-16 h-16 bg-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-indigo-600 text-3xl shadow-inner"><i class="fa-solid fa-store"></i></div>
+            <h2 class="text-3xl font-extrabold mb-2 text-slate-800">MITRAMART</h2>
+            <p class="text-slate-500 mb-8 text-sm">Masuk untuk memulai sesi kasir</p>
+            <div class="relative mb-5">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400"><i class="fa-solid fa-user"></i></div>
+                <input type="text" id="username" placeholder="Username" class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all">
+            </div>
+            <div class="relative mb-8">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400"><i class="fa-solid fa-lock"></i></div>
+                <input type="password" id="password" placeholder="Password" class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all">
+            </div>
+            <button onclick="handleLogin()" class="w-full bg-indigo-600 text-white py-3.5 rounded-xl font-bold text-lg hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-500/30 transition-all active:scale-95">Masuk <i class="fa-solid fa-arrow-right ml-2 transform group-hover:translate-x-1 transition-transform"></i></button>
+        </div>
+    </div>
+
+    <div id="dashboard" class="flex h-screen w-full anim-slide-up">
+        <div class="w-[260px] bg-[#0f172a] border-r border-slate-800 flex flex-col justify-between shadow-2xl z-20 flex-shrink-0">
+            <div>
+                <div class="p-6 border-b border-slate-800/60 flex items-center gap-3 hover:bg-slate-800/30 transition-colors cursor-default">
+                    <div class="w-10 h-10 bg-indigo-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 transform hover:rotate-12 transition-transform"><i class="fa-solid fa-store"></i></div>
+                    <div>
+                        <h1 class="font-extrabold text-xl text-white tracking-tight">MITRAMART</h1>
+                        <p class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider" id="kasir-name">Kasir Aktif</p>
+                    </div>
+                </div>
+                <div class="p-4">
+                    <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 ml-2">Menu Kategori</p>
+                    <ul id="category-list" class="space-y-1"></ul>
+                </div>
+            </div>
+            <div class="p-4 border-t border-slate-800/60 bg-slate-900/50">
+                <button onclick="showSales()" class="w-full bg-indigo-600 text-white p-3 rounded-xl font-semibold hover:bg-indigo-700 shadow-lg shadow-indigo-900/20 transition-all hover:-translate-y-1 mb-3 flex justify-center items-center gap-2 border border-indigo-500/50"><i class="fa-solid fa-chart-pie"></i> Laporan Penjualan</button>
+                <button onclick="showAddProduct()" class="w-full bg-transparent border-2 border-dashed border-slate-700 text-slate-300 p-3 rounded-xl font-semibold hover:bg-slate-800 hover:text-white hover:border-slate-500 transition-all hover:-translate-y-1 flex justify-center items-center gap-2"><i class="fa-solid fa-plus"></i> Tambah Produk</button>
+            </div>
+        </div>
+
+        <div class="flex-1 bg-slate-200/50 p-8 overflow-y-auto relative shadow-inner">
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <h2 class="text-2xl font-extrabold text-slate-800">Daftar Produk</h2>
+                    <p class="text-slate-500 text-sm mt-1">Pilih produk untuk ditambahkan ke keranjang</p>
+                </div>
+                <div class="bg-white p-2 rounded-xl shadow-sm border border-slate-200 text-slate-600 flex items-center w-72 focus-within:ring-2 focus-within:ring-indigo-500 transition-all transform hover:scale-[1.02]">
+                    <i class="fa-solid fa-search ml-3 text-slate-400"></i>
+                    <input type="text" id="search-input" onkeyup="searchProducts()" placeholder="Ketik nama produk..." class="w-full pl-3 pr-2 outline-none text-sm bg-transparent font-medium">
+                </div>
+            </div>
+            <div id="product-grid" class="grid grid-cols-2 lg:grid-cols-3 gap-8 pb-20"></div>
+        </div>
+
+        <div class="w-[360px] bg-slate-50 border-l border-slate-200 flex flex-col shadow-2xl z-20 flex-shrink-0">
+            <div class="p-5 border-b border-slate-800 bg-slate-900 text-white flex justify-between items-center shadow-md">
+                <h3 class="font-bold text-lg flex items-center gap-2"><i class="fa-solid fa-cart-shopping text-indigo-400"></i> Transaksi Aktif</h3>
+                <span id="cart-badge" class="bg-indigo-600 text-xs py-1 px-2.5 rounded-full font-bold shadow-inner transition-transform duration-300">0 Item</span>
+            </div>
+            <div id="cart-items" class="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-200/60 shadow-inner overflow-x-hidden"></div>
+            <div class="p-5 bg-white border-t border-slate-200 rounded-t-3xl shadow-[0_-15px_25px_rgba(0,0,0,0.05)] relative z-10">
+                <div class="flex justify-between items-end mb-5 bg-indigo-50 p-4 rounded-2xl border border-indigo-100 transition-all hover:shadow-md">
+                    <span class="text-indigo-800 font-bold">Total Tagihan</span>
+                    <span id="total-price" class="text-2xl font-extrabold text-indigo-600 transition-all duration-300">Rp 0</span>
+                </div>
+                <div class="mb-4">
+                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Metode Pembayaran</label>
+                    <div class="relative mt-2 hover:scale-[1.01] transition-transform">
+                        <select id="payment-method" onchange="togglePaymentMethod()" class="w-full appearance-none p-3 pl-10 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white font-medium cursor-pointer">
+                            <option value="cash">Tunai (Cash)</option>
+                            <option value="qris">E-Wallet (QRIS)</option>
+                        </select>
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400"><i class="fa-solid fa-wallet"></i></div>
+                        <div class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-400"><i class="fa-solid fa-chevron-down text-xs"></i></div>
+                    </div>
+                </div>
+                <div id="qris-area" style="display: none;" class="mb-5 text-center bg-slate-50 p-4 rounded-2xl border border-slate-200 shadow-sm anim-pop-in">
+                    <p class="text-xs text-slate-500 mb-3 font-bold">Arahkan pelanggan scan QR ini</p>
+                    <div class="p-2 border-2 border-indigo-100 rounded-xl inline-block bg-white shadow-sm transform hover:scale-105 transition-transform">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg" alt="QRIS" class="w-28 h-28">
+                    </div>
+                    <p class="text-xs text-indigo-600 font-bold mt-3 flex items-center justify-center gap-2"><i class="fa-solid fa-circle-notch fa-spin"></i> Menunggu...</p>
+                </div>
+                <div id="cash-area" class="mb-5 anim-pop-in">
+                    <div class="mb-3 hover:scale-[1.01] transition-transform">
+                        <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Nominal Uang (Rp)</label>
+                        <div class="relative mt-2">
+                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 font-bold">Rp</div>
+                            <input type="number" id="input-bayar" oninput="calculateChange()" class="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white font-bold text-lg shadow-inner transition-all" placeholder="0">
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center px-2">
+                        <span class="text-sm font-bold text-slate-500">Kembalian:</span>
+                        <span id="kembalian-text" class="text-lg font-extrabold text-slate-800 transition-all duration-300">Rp 0</span>
+                    </div>
+                </div>
+                <button onclick="checkout()" class="w-full bg-emerald-500 text-white py-4 rounded-xl font-bold text-lg hover:bg-emerald-600 hover:shadow-lg hover:shadow-emerald-500/30 transition-all flex justify-center items-center gap-2 active:scale-95 transform hover:-translate-y-1"><i class="fa-solid fa-check-circle"></i> Selesaikan Pesanan</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="fixed top-8 right-8 text-white px-6 py-4 rounded-2xl font-bold shadow-2xl flex items-center gap-3 transition-all duration-500 transform translate-x-[150%] opacity-0 z-[100] pointer-events-none">
+        <i id="toast-icon" class="fa-solid fa-check-circle text-xl"></i>
+        <span id="toast-msg">Notifikasi</span>
+    </div>
+
+    <div id="receipt-area" class="modal-overlay"></div>
+    
+    <div id="sales-modal" class="modal-overlay">
+        <div class="bg-white p-8 rounded-3xl w-[360px] shadow-2xl relative anim-pop-in">
+            <button onclick="closeSales()" class="absolute top-4 right-4 text-slate-400 hover:text-rose-500 hover:rotate-90 text-xl transition-all"><i class="fa-solid fa-xmark"></i></button>
+            <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-600 text-2xl"><i class="fa-solid fa-chart-line"></i></div>
+            <h2 class="text-2xl font-extrabold mb-6 text-slate-800 text-center">Ringkasan Penjualan</h2>
+            <div class="bg-slate-50 p-5 rounded-2xl mb-4 border border-slate-100 flex items-center gap-4 hover:bg-slate-100 transition-colors">
+                <div class="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center text-slate-500 text-xl"><i class="fa-solid fa-receipt"></i></div>
+                <div>
+                    <p class="text-xs text-slate-400 font-bold uppercase">Total Transaksi</p>
+                    <p id="sales-count" class="text-2xl font-black text-slate-700 leading-none mt-1">0</p>
+                </div>
+            </div>
+            <div class="bg-emerald-50 p-5 rounded-2xl mb-6 border border-emerald-100 flex items-center gap-4 hover:bg-emerald-100 transition-colors">
+                <div class="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center text-emerald-500 text-xl"><i class="fa-solid fa-wallet"></i></div>
+                <div>
+                    <p class="text-xs text-emerald-600/70 font-bold uppercase">Total Pendapatan</p>
+                    <p id="sales-revenue" class="text-2xl font-black text-emerald-600 leading-none mt-1">Rp 0</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="delete-confirm-modal" class="modal-overlay">
+        <div class="bg-white p-8 rounded-3xl w-[350px] shadow-2xl text-center relative anim-pop-in">
+            <div class="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4 text-rose-500 text-3xl animate-pulse">
+                <i class="fa-solid fa-trash-can"></i>
+            </div>
+            <h2 class="text-xl font-extrabold mb-2 text-slate-800">Hapus Produk?</h2>
+            <p class="text-slate-500 text-sm mb-6">Produk yang dihapus akan hilang dari database dan tidak bisa dikembalikan.</p>
+            <div class="flex gap-3">
+                <button onclick="closeDeleteConfirm()" class="w-1/2 bg-slate-100 text-slate-600 py-3 rounded-xl font-bold hover:bg-slate-200 transition-colors">Batal</button>
+                <button id="btn-confirm-delete" class="w-1/2 bg-rose-500 text-white py-3 rounded-xl font-bold hover:bg-rose-600 transition-all shadow-lg shadow-rose-500/30 active:scale-95">Ya, Hapus</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="add-product-modal" class="modal-overlay">
+        <div class="bg-white p-8 rounded-3xl w-[450px] shadow-2xl relative anim-pop-in">
+            <button onclick="closeAddProduct()" class="absolute top-5 right-5 text-slate-400 hover:text-rose-500 hover:rotate-90 text-xl transition-all"><i class="fa-solid fa-xmark"></i></button>
+            <h2 class="text-2xl font-extrabold mb-6 text-slate-800 flex items-center gap-3"><i class="fa-solid fa-box-open text-indigo-500"></i> Tambah Produk</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Nama Produk</label>
+                    <input type="text" id="new-name" placeholder="Misal: Chitato Sapi Panggang" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium transition-all">
+                </div>
+                <div class="flex gap-4">
+                    <div class="w-1/2">
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Harga (Rp)</label>
+                        <input type="number" id="new-price" placeholder="0" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium transition-all">
+                    </div>
+                    <div class="w-1/2">
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Stok Awal</label>
+                        <input type="number" id="new-stock" placeholder="0" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium transition-all">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Kategori</label>
+                    <select id="new-category" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium cursor-pointer transition-all">
+                        <option value="1">🍔 Makanan</option>
+                        <option value="2">🥤 Minuman</option>
+                        <option value="3">🧴 Kebutuhan Sehari-hari</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Pilih Foto Produk</label>
+                    <input type="file" id="new-image" accept="image/*" class="w-full p-2 border border-dashed border-slate-300 rounded-xl bg-slate-50 text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-600 hover:file:bg-indigo-100 cursor-pointer transition-all">
+                </div>
+            </div>
+            <div class="mt-8 flex gap-3">
+                <button onclick="closeAddProduct()" class="w-1/3 bg-slate-100 text-slate-600 py-3 rounded-xl font-bold hover:bg-slate-200 transition-colors">Batal</button>
+                <button onclick="saveProduct()" class="w-2/3 bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-500/30 transition-all active:scale-95">Simpan ke Database</button>
+            </div>
+        </div>
+    </div>
+    <script src="renderer.js"></script>
+</body>
+</html>
